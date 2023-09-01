@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: espocrm-web
+  name: espocrm-websocket
+  labels:
+    site: espocrm-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: espocrm-websocket
+      type: frontend
+  template:
+    metadata:
+      labels:
+        app: espocrm-websocket
+        type: frontend
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: espocrm-websocket-con
+        image: espocrm/espocrm
+        ports:
+        - containerPort: 80
+        command: ["docker-websocket.sh"]
+        env:
+
+          - name: ESPOCRM_CONFIG_USE_WEB_SOCKET
+            valueFrom:
+              configMapKeyRef:
+                name: espocrm-websocket
+                key: ESPOCRM_CONFIG_USE_WEB_SOCKET
+
+          - name: ESPOCRM_CONFIG_WEB_SOCKET_URL
+            value: ws://espocrm-websocket:80
+
+          - name: ESPOCRM_CONFIG_WEB_SOCKET_ZERO_M_Q_SUBSCRIBER_DSN
+            value: tcp://*:7777
+
+          - name: ESPOCRM_CONFIG_WEB_SOCKET_ZERO_M_Q_SUBMISSION_DSN
+            value: tcp://espocrm-websocket:7777
+
+        volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: /var/www/html
+
+      volumes:
+        - name: mysql-persistent-storage
+          persistentVolumeClaim:
+            claimName: mysql-pv-claim

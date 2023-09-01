@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: espocrm-web
+  name: espocrm-daemon
+  labels:
+    site: espocrm-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: espocrm-daemon
+      type: frontend
+  template:
+    metadata:
+      labels:
+        app: espocrm-daemon
+        type: frontend
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: espocrm-daemon-con
+        image: espocrm/espocrm
+        command: ["docker-daemon.sh"]
+        ports:
+        - containerPort: 80
+
+        volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: /var/www/html
+
+      volumes:
+        - name: mysql-persistent-storage
+          persistentVolumeClaim:
+            claimName: mysql-pv-claim

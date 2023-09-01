@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: espocrm-web
+  name: espocrm
+  labels:
+    site: espocrm-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: espocrm
+      type: frontend
+  template:
+    metadata:
+        labels:
+          app: espocrm
+          type: frontend
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: espocrm-ui-con
+        image: espocrm/espocrm
+        ports:
+        - containerPort: 80
+        env:
+          - name: ESPOCRM_DATABASE_HOST
+            valueFrom:
+              secretKeyRef:
+                name: espocrm-ui-secret
+                key: ESPOCRM_DATABASE_HOST
+
+          - name: ESPOCRM_DATABASE_USER
+            valueFrom:
+              secretKeyRef:
+                name: espocrm-ui-secret
+                key: ESPOCRM_DATABASE_USER
+
+          - name: ESPOCRM_DATABASE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: espocrm-ui-secret
+                key: ESPOCRM_DATABASE_PASSWORD
+
+          - name: ESPOCRM_ADMIN_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: espocrm-ui-secret
+                key: ESPOCRM_ADMIN_USERNAME
+
+          - name: ESPOCRM_ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: espocrm-ui-secret
+                key: ESPOCRM_ADMIN_PASSWORD
+
+          # - name: ESPOCRM_SITE_URL
+          #   value: http://localhost:8080
+
+        volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: /var/www/html
+
+      volumes:
+        - name: mysql-persistent-storage
+          persistentVolumeClaim:
+            claimName: mysql-pv-claim
